@@ -1,0 +1,377 @@
+<!DOCTYPE html><html><head><meta charset='utf-8'><title>Delivery Metrics Report — Delivery Metrics Comparison Analysis - 20260509.xlsx</title><style>
+*, *::before, *::after { box-sizing: border-box; }
+html { overflow-x: hidden; }
+body {
+  font-family: system-ui, -apple-system, Segoe UI, sans-serif;
+  margin: 0;
+  padding: 24px clamp(16px, 3vw, 40px) 48px;
+  color: #1a1a1a;
+  width: 100%;
+}
+h1 { font-size: 1.35rem; }
+h2 { font-size: 1.1rem; margin-top: 2rem; border-bottom: 1px solid #ddd; padding-bottom: 6px; }
+h3 { font-size: 1rem; margin-top: 1.25rem; }
+p.note { color: #555; font-size: 0.9rem; width: 100%; max-width: 100%; line-height: 1.45; }
+table { border-collapse: collapse; width: 100%; max-width: 100%; margin: 12px 0; font-size: 0.88rem; table-layout: auto; }
+th, td { border: 1px solid #ddd; padding: 8px 10px; text-align: left; }
+.summary-col { max-width: 36rem; }
+.summary-cell { max-width: 36rem; white-space: normal; word-break: break-word; line-height: 1.35; vertical-align: top; }
+th { background: #f4f4f4; }
+tr:nth-child(even) { background: #fafafa; }
+.num { text-align: right; font-variant-numeric: tabular-nums; }
+.badge { display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: 0.75rem; background: #eef; }
+.warn { background: #fff3cd; }
+.th-sub { display: block; font-weight: 500; font-size: 0.72rem; color: #444; margin-top: 4px; line-height: 1.25; max-width: 100%; }
+.chart-row {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: clamp(16px, 2vw, 32px);
+  margin: 24px 0 16px;
+  width: 100%;
+  align-items: stretch;
+}
+.chart-box {
+  width: 100%;
+  min-width: 0;
+  height: 460px;
+  min-height: 460px;
+  position: relative;
+}
+@media (max-width: 960px) {
+  .chart-row { grid-template-columns: 1fr; }
+  .chart-box { height: 460px; min-height: 460px; }
+}
+/* Watch table: max dwell heat + bottleneck stage */
+.mw-heat { font-weight: 600; }
+.mw-h1 { background: #fef9c3; color: #713f12; }
+.mw-h2 { background: #fde047; color: #422006; }
+.mw-h3 { background: #fdba74; color: #431407; }
+.mw-h4 { background: #ef4444; color: #fff; }
+.th-mw {
+  background: linear-gradient(180deg, #fef9c3 0%, #fde68a 100%);
+  color: #422006;
+  font-weight: 600;
+}
+.th-sens { background: #ecfdf5; color: #14532d; font-weight: 600; }
+.note-em { padding: 0.12em 0.4em; border-radius: 4px; font-weight: 600; }
+.note-em-mw { background: #fef9c3; color: #713f12; }
+/* Top Spent Time by Key Stage: top 5 = same hue (amber), stronger → lighter */
+tr.dwell-rank-1 > td { background: #fbbf24 !important; }
+tr.dwell-rank-2 > td { background: #fcd34d !important; }
+tr.dwell-rank-3 > td { background: #fde68a !important; }
+tr.dwell-rank-4 > td { background: #fef3c7 !important; }
+tr.dwell-rank-5 > td { background: #fffbeb !important; }
+/* Overall Monthly Summary: newest row (latest month) at top */
+.monthly-summary-table tbody tr.summary-latest-month td {
+  background: #c5e0cd;
+  font-weight: 600;
+  border-color: #6B9E78;
+  box-shadow: inset 0px 0.5px #6B9E78;
+}
+.report-toolbar {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  display: flex;
+  justify-content: flex-end;
+  padding: 0 0 12px;
+  margin: 0 0 8px;
+  background: #fff;
+  border-bottom: 1px solid #e8e8e8;
+}
+#btn-download-screenshot {
+  font-family: inherit;
+  font-size: 0.875rem;
+  font-weight: 600;
+  padding: 8px 16px;
+  border-radius: 8px;
+  border: 1px solid #003D4F;
+  background: #003D4F;
+  color: #fff;
+  cursor: pointer;
+}
+#btn-download-screenshot:hover { filter: brightness(1.08); }
+#btn-download-screenshot:disabled { opacity: 0.65; cursor: wait; }
+</style></head><body>
+<div class="report-toolbar"><button type="button" id="btn-download-screenshot" title="Save full report as PNG (charts included)">Download screenshot (PNG)</button></div>
+<div id="report-capture-root"><h1>Delivery Metrics Report — Delivery Metrics Comparison Analysis - 20260509.xlsx</h1><p class='note'>Durations are parsed from the spreadsheet using <strong>1w = 7×24h</strong>, <strong>1d = 24h</strong>, then <strong>shown in days</strong> (24h = 1d). Issues are ranked by the longest single dwell among: In Progress, Ready for Review, Review, Blocked, Ready for Deployment, and QA (when present). Use this to decide where to add process attention.</p><h2>Overall Monthly Summary</h2><p class='note'>In this table, months are listed <strong>newest first</strong> (latest month at the top; that row is lightly highlighted). The <strong>90% line</strong> column means: if you sorted every issue’s In Progress time from shortest to longest, about <strong>90% of issues</strong> would be at or below this value (only the slowest ~10% took longer). All dwell columns use <strong>days</strong> (24h = 1d).<br><br><strong>Average Cycle Time</strong> is the mean, over all issues in that month, of each issue’s cycle time, where cycle time = In Progress + Blocked + Ready for Review + Review + QA + Ready for Deployment.</p><table class='monthly-summary-table'><thead><tr><th>Month</th><th>Issues</th><th>Story points<br><span class='th-sub'>(sum)</span></th><th>Avg In Progress<br><span class='th-sub'>(days)</span></th><th>In Progress — “90% line”<span class='th-sub' title='Same as 90th percentile: 9 in 10 issues finished In Progress in this time or less.'>9 in 10 issues spent ≤ this time (days)</span></th><th>Avg Ready for Review<br><span class='th-sub'>(days)</span></th><th>Avg Review<br><span class='th-sub'>(days)</span></th><th>Avg Blocked<br><span class='th-sub'>(days)</span></th><th>Avg Ready for Deploy / QA<span class='th-sub'>(days). Sheets use either Ready for Deployment or QA; we take the longer of the two per issue when both exist.</span></th><th>Average Cycle Time<br><span class='th-sub'>(mean per issue, days)</span></th></tr></thead><tbody><tr class='summary-latest-month'><td>Apr 2026</td><td class='num'>10</td><td class='num'>26.0</td><td class='num'>3.30d</td><td class='num'>5.02d</td><td class='num'>1.45d</td><td class='num'>0.08d</td><td class='num'>5.89d</td><td class='num'>0d</td><td class='num'>5.07d</td></tr><tr><td>Mar 2026</td><td class='num'>4</td><td class='num'>13.0</td><td class='num'>4.55d</td><td class='num'>11.81d</td><td class='num'>0d</td><td class='num'>0.93d</td><td class='num'>—</td><td class='num'>—</td><td class='num'>4.78d</td></tr><tr><td>Feb 2026</td><td class='num'>6</td><td class='num'>10.0</td><td class='num'>0.95d</td><td class='num'>2.13d</td><td class='num'>0.63d</td><td class='num'>—</td><td class='num'>—</td><td class='num'>—</td><td class='num'>1.37d</td></tr><tr><td>Jan 2026</td><td class='num'>2</td><td class='num'>4.0</td><td class='num'>0.43d</td><td class='num'>0.77d</td><td class='num'>0.49d</td><td class='num'>—</td><td class='num'>—</td><td class='num'>0.01d</td><td class='num'>0.93d</td></tr></tbody></table><h3>Monthly Charts</h3><div class='chart-row'><div class='chart-box'><canvas id='chartVolume' aria-label='Issues and story points by month'></canvas></div><div class='chart-box'><canvas id='chartStages' aria-label='Average days in key stages including blocked by month'></canvas></div></div><div class='chart-row'><div class='chart-box'><canvas id='chartStageMix' aria-label='Average dwell mix by month stacked'></canvas></div><div class='chart-box'><canvas id='chartIssuesCycle' aria-label='Issues completed and average cycle time by month'></canvas></div></div><script type='application/json' id='chart-data'>{"labels": ["Jan 2026", "Feb 2026", "Mar 2026", "Apr 2026"], "issues": [2, 6, 4, 10], "points": [4.0, 10.0, 13.0, 26.0], "storyPointsPerIssue": [2.0, 1.67, 3.25, 2.6], "throughputY1Max": 52.0, "throughputYMax": 20, "avgIpDays": [0.4313, 0.9541, 4.5476, 3.3004], "p90IpDays": [0.7707, 2.1274, 11.809, 5.0192], "avgRfrDays": [0.4948, 0.6262, 0.0, 1.4527], "avgReviewDays": [null, null, 0.9278, 0.0753], "avgDepDays": [0.0125, null, null, 0.0], "avgBlockedDays": [null, null, null, 5.8924], "avgCycleDays": [0.9323, 1.3715, 4.7795, 5.0669]}</script><script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script>
+(function() {
+  var el = document.getElementById('chart-data');
+  if (!el || typeof Chart === 'undefined') return;
+  var d = JSON.parse(el.textContent);
+  var labels = d.labels;
+  function d2(v) { return v == null ? null : Math.round(v * 1000) / 1000; }
+  function d0(v) { return v == null || !isFinite(v) ? 0 : Math.round(v * 1000) / 1000; }
+  new Chart(document.getElementById('chartVolume'), {
+    type: 'bar',
+    plugins: [{
+      id: 'throughputVolumeBarLabels',
+      afterDatasetsDraw: function(chart) {
+        var ctx = chart.ctx;
+        var datasets = chart.data.datasets;
+        var styles = [
+          { font: '600 10px system-ui, -apple-system, Segoe UI, sans-serif', color: '#6B9E78',
+            fmt: function(v) { return String(Math.round(v)); } },
+          { font: '600 10px system-ui, -apple-system, Segoe UI, sans-serif', color: '#47A1AD',
+            fmt: function(v) {
+              var r = Math.round(v * 10) / 10;
+              return (Math.abs(r - Math.round(r)) < 1e-9) ? String(Math.round(r)) : String(r);
+            } },
+          { font: '600 10px system-ui, -apple-system, Segoe UI, sans-serif', color: '#634F7D',
+            fmt: function(v) { return String(Math.round(v * 100) / 100); } }
+        ];
+        for (var di = 0; di < datasets.length; di++) {
+          var meta = chart.getDatasetMeta(di);
+          if (!meta || meta.hidden) continue;
+          var ds = datasets[di];
+          var st = styles[di] || styles[0];
+          for (var i = 0; i < meta.data.length; i++) {
+            var el = meta.data[i];
+            if (!el || el.skip) continue;
+            var raw = ds.data[i];
+            if (raw == null) continue;
+            var v = Number(raw);
+            if (!isFinite(v)) continue;
+            var x = el.x;
+            var yTop = Math.min(el.y, el.base) - 3;
+            ctx.save();
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'bottom';
+            ctx.font = st.font;
+            ctx.fillStyle = st.color;
+            ctx.fillText(st.fmt(v), x, yTop);
+            ctx.restore();
+          }
+        }
+      }
+    }],
+    data: {
+      labels: labels,
+      datasets: [
+        { label: 'Issues', data: d.issues, yAxisID: 'y', backgroundColor: '#6B9E78' },
+        { label: 'Story points (sum)', data: d.points, yAxisID: 'y', backgroundColor: '#47A1AD' },
+        { label: 'Story points / issue', data: d.storyPointsPerIssue, yAxisID: 'y1', backgroundColor: '#634F7D' }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      layout: { padding: { top: 24, right: 10, bottom: 8, left: 8 } },
+      plugins: {
+        title: { display: true, text: 'Delivery Throughput & Story Points by Month', font: { size: 15 } },
+        legend: { position: 'bottom', labels: { boxWidth: 12, padding: 10, font: { size: 11 }, usePointStyle: true } }
+      },
+      scales: {
+        x: { 
+            ticks: { maxRotation: 0, font: { size: 12 } }, 
+            grid: { display: false } 
+        },
+        y: { 
+            type: 'linear', 
+            position: 'left', 
+            title: { display: true, text: 'Issues & Story Points', 
+            font: { size: 12 } }, 
+            beginAtZero: true, 
+            max: d.throughputY1Max,
+            grid: { drawOnChartArea: false }, 
+            ticks: { font: { size: 11 }, display: false } 
+        },
+        y1: { 
+            type: 'linear', 
+            position: 'right', 
+            title: { display: true, text: 'Story points per issue', 
+            font: { size: 12 } }, 
+            grid: { drawOnChartArea: true }, 
+            beginAtZero: true, 
+            max: 5,
+            min: -6,
+            ticks: { font: { size: 11 }, display: false, stepSize: 3} 
+        }
+      }
+    }
+  });
+  new Chart(document.getElementById('chartStages'), {
+    type: 'line',
+    data: {
+      labels: labels,
+      datasets: [
+        { label: 'Avg In Progress (d)', data: d.avgIpDays.map(d2), borderColor: '#003D4F', backgroundColor: '#003D4F', pointBackgroundColor: '#003D4F', pointBorderColor: '#003D4F', pointRadius: 4, pointHoverRadius: 6, borderWidth: 2, fill: false, tension: 0.2, spanGaps: true },
+        { label: 'In Progress 90% line (d)', data: d.p90IpDays.map(d2), borderColor: '#47A1AD', backgroundColor: '#47A1AD', pointBackgroundColor: '#47A1AD', pointBorderColor: '#47A1AD', pointRadius: 4, pointHoverRadius: 6, borderWidth: 2, fill: false, borderDash: [4,4], tension: 0.2, spanGaps: true },
+        { label: 'Avg Ready for Review (d)', data: d.avgRfrDays.map(d2), borderColor: '#CC850A', backgroundColor: '#CC850A', pointBackgroundColor: '#CC850A', pointBorderColor: '#CC850A', pointRadius: 4, pointHoverRadius: 6, borderWidth: 2, fill: false, tension: 0.2, spanGaps: true },
+        { label: 'Avg Review (d)', data: d.avgReviewDays.map(d2), borderColor: '#6B9E78', backgroundColor: '#6B9E78', pointBackgroundColor: '#6B9E78', pointBorderColor: '#6B9E78', pointRadius: 4, pointHoverRadius: 6, borderWidth: 2, fill: false, tension: 0.2, spanGaps: true },
+        { label: 'Avg Blocked (d)', data: d.avgBlockedDays.map(d2), borderColor: '#F2617A', backgroundColor: '#F2617A', pointBackgroundColor: '#F2617A', pointBorderColor: '#F2617A', pointRadius: 4, pointHoverRadius: 6, borderWidth: 2, fill: false, tension: 0.2, spanGaps: true },
+        { label: 'Avg Ready for Deploy / QA (d)', data: d.avgDepDays.map(d2), borderColor: '#003D4F', backgroundColor: '#003D4F', pointBackgroundColor: '#003D4F', pointBorderColor: '#003D4F', pointRadius: 4, pointHoverRadius: 6, borderWidth: 2, fill: false, tension: 0.2, spanGaps: true },
+        { label: 'Avg Cycle Time / issue (d)', data: d.avgCycleDays.map(d2), borderColor: '#634F7D', backgroundColor: '#634F7D', pointBackgroundColor: '#634F7D', pointBorderColor: '#634F7D', pointRadius: 4, pointHoverRadius: 6, fill: false, borderWidth: 2.5, tension: 0.2, spanGaps: true }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      layout: { padding: { top: 24, right: 10, bottom: 8, left: 8 } },
+      plugins: {
+        title: { display: true, text: 'Stage Dwell and Average Cycle Time (d)', font: { size: 15 } },
+        legend: { position: 'bottom', labels: { boxWidth: 12, padding: 10, font: { size: 11 }, usePointStyle: true } }
+      },
+      scales: {
+        x: { ticks: { maxRotation: 0, font: { size: 12 } }, grid: { display: false } },
+        y: { beginAtZero: true, title: { display: true, text: 'Days', font: { size: 12 } }, ticks: { font: { size: 11 } } }
+      }
+    }
+  });
+  new Chart(document.getElementById('chartStageMix'), {
+    type: 'bar',
+    data: {
+      labels: labels,
+      datasets: [
+        { label: 'In Progress', data: d.avgIpDays.map(d0), backgroundColor: '#003D4F' },
+        { label: 'Ready for Review', data: d.avgRfrDays.map(d0), backgroundColor: '#CC850A' },
+        { label: 'Review', data: d.avgReviewDays.map(d0), backgroundColor: '#6B9E78' },
+        { label: 'Blocked', data: d.avgBlockedDays.map(d0), backgroundColor: '#F2617A' },
+        { label: 'Deploy / QA', data: d.avgDepDays.map(d0), backgroundColor: '#47A1AD' }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      layout: { padding: { top: 24, right: 10, bottom: 8, left: 8 } },
+      plugins: {
+        title: { display: true, text: 'Avg Dwell Mix by Month (Stacked days)', font: { size: 15 } },
+        legend: { position: 'bottom', labels: { boxWidth: 12, padding: 10, font: { size: 11 }, usePointStyle: true } },
+        tooltip: { mode: 'index', intersect: false }
+      },
+      scales: {
+        x: { stacked: true, ticks: { maxRotation: 0, font: { size: 12 } }, grid: { display: false } },
+        y: { stacked: true, beginAtZero: true, title: { display: true, text: 'Mean days per issue (sum of segments)', font: { size: 12 } }, ticks: { font: { size: 11 }, stepSize: 5 } }
+      }
+    }
+  });
+  new Chart(document.getElementById('chartIssuesCycle'), {
+    type: 'bar',
+    plugins: [{
+      id: 'issuesCycleValueLabels',
+      afterDatasetsDraw: function(chart) {
+        var ctx = chart.ctx;
+        var datasets = chart.data.datasets;
+        for (var di = 0; di < datasets.length; di++) {
+          var meta = chart.getDatasetMeta(di);
+          if (!meta || meta.hidden) continue;
+          var ds = datasets[di];
+          for (var i = 0; i < meta.data.length; i++) {
+            var el = meta.data[i];
+            if (!el || el.skip) continue;
+            var raw = ds.data[i];
+            if (raw == null) continue;
+            var v = Number(raw);
+            if (!isFinite(v)) continue;
+            var x = el.x;
+            var yTop;
+            if (di === 0) {
+              yTop = Math.min(el.y, el.base) - 4;
+              ctx.save();
+              ctx.textAlign = 'center';
+              ctx.textBaseline = 'bottom';
+              ctx.font = '600 11px system-ui, -apple-system, Segoe UI, sans-serif';
+              ctx.fillStyle = '#6B9E78';
+              ctx.fillText(String(Math.round(v)), x, yTop);
+              ctx.restore();
+            } else {
+              yTop = el.y - 10;
+              ctx.save();
+              ctx.textAlign = 'center';
+              ctx.textBaseline = 'bottom';
+              ctx.font = '600 10px system-ui, -apple-system, Segoe UI, sans-serif';
+              ctx.fillStyle = '#634F7D';
+              ctx.fillText((Math.round(v * 100) / 100) + ' d', x, yTop);
+              ctx.restore();
+            }
+          }
+        }
+      }
+    }],
+    data: {
+      labels: labels,
+      datasets: [
+        { type: 'bar', label: 'Issues', data: d.issues, yAxisID: 'y', backgroundColor: '#6B9E78' },
+        { type: 'line', label: 'Avg cycle time / issue (d)', data: d.avgCycleDays.map(d2), yAxisID: 'y1', borderColor: '#634F7D', backgroundColor: '#634F7D', pointBackgroundColor: '#634F7D', pointBorderColor: '#634F7D', pointRadius: 4, pointHoverRadius: 6, borderWidth: 2.5, fill: false, tension: 0.2, spanGaps: true }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      layout: { padding: { top: 24, right: 10, bottom: 8, left: 8 } },
+      plugins: {
+        title: { display: true, text: 'Throughput vs Average Cycle Time', font: { size: 15 } },
+        legend: { position: 'bottom', labels: { boxWidth: 12, padding: 10, font: { size: 11 }, usePointStyle: true } }
+      },
+      scales: {
+        x: { ticks: { maxRotation: 0, font: { size: 12 } }, grid: { display: false } },
+        y: { 
+            type: 'linear', 
+            position: 'left', 
+            beginAtZero: true, 
+            max: d.throughputYMax,
+            title: { display: true, text: 'Issues', font: { size: 12 } }, 
+            grid: { drawOnChartArea: false }, 
+            ticks: { 
+                font: { size: 11 },
+                display: false 
+            } 
+        },
+        y1: { 
+            type: 'linear', 
+            position: 'right', 
+            beginAtZero: true, 
+            max: 6,
+            min: -5,
+            title: { display: true, text: 'Avg cycle time / issue (d)', font: { size: 12 } }, 
+            grid: { drawOnChartArea: false }, 
+            ticks: { font: { size: 11 }, display: false } 
+        }
+      }
+    }
+  });
+})();
+</script><h2>Issues Needing More Watch (Longest Dwell in Key Stage)</h2><p class='note'>Only issues where <span class='note-em note-em-mw'>max watch-stage dwell</span> reached at least <strong>3 days</strong> in <span class='note-em note-em-mw'>a single sensitive stage</span> are listed (others are omitted).</p><h3>Apr 2026</h3><table><thead><tr><th>Key</th><th class='summary-col'>Summary</th><th>Status</th><th class='th-mw'>Max watch stage days</th><th class='th-sens'>In Progress (d)</th><th class='th-sens'>Ready for Review (d)</th><th class='th-sens'>Review (d)</th><th class='th-sens'>Blocked (d)</th><th class='th-sens'>Ready for Deployment / QA (d)</th><th>Resolved</th></tr></thead><tbody><tr><td><strong>KEY-1105</strong></td><td class='summary-cell'>Apr Card Title 18 Apr Card Title 18 Apr Card Title 18 Apr Card Title 18</td><td>Done</td><td class='num mw-heat mw-h2'>6.42d</td><td class='num mw-heat mw-h2'>6.42d</td><td class='num'>0.24d</td><td class='num'>—</td><td class='num'>—</td><td class='num'>—</td><td>2026-04-22</td></tr><tr><td><strong>KEY-819</strong></td><td class='summary-cell'>Apr Card Title 37</td><td>Done</td><td class='num mw-heat mw-h2'>5.89d</td><td class='num'>2.32d</td><td class='num'>2.81d</td><td class='num'>—</td><td class='num mw-heat mw-h2'>5.89d</td><td class='num'>—</td><td>2026-04-13</td></tr><tr><td><strong>KEY-1089</strong></td><td class='summary-cell'>Apr Card Title 31</td><td>Done</td><td class='num mw-heat mw-h1'>4.86d</td><td class='num mw-heat mw-h1'>4.86d</td><td class='num'>—</td><td class='num'>0.0007d</td><td class='num'>—</td><td class='num'>0d</td><td>2026-04-08</td></tr><tr><td><strong>KEY-1091</strong></td><td class='summary-cell'>Apr Card Title 29, Apr Card Title 29 Apr Card Title 29</td><td>Done</td><td class='num mw-heat mw-h1'>4.81d</td><td class='num mw-heat mw-h1'>4.81d</td><td class='num'>0.96d</td><td class='num'>—</td><td class='num'>—</td><td class='num'>—</td><td>2026-04-15</td></tr><tr><td><strong>KEY-1038</strong></td><td class='summary-cell'>Apr Card Title 36</td><td>Done</td><td class='num mw-heat mw-h1'>4.74d</td><td class='num mw-heat mw-h1'>4.74d</td><td class='num'>—</td><td class='num'>—</td><td class='num'>—</td><td class='num'>—</td><td>2026-04-07</td></tr><tr><td><strong>KEY-1090</strong></td><td class='summary-cell'>Apr Card Title 30</td><td>Done</td><td class='num mw-heat mw-h1'>4.62d</td><td class='num mw-heat mw-h1'>4.62d</td><td class='num'>0.12d</td><td class='num'>—</td><td class='num'>—</td><td class='num'>—</td><td>2026-04-13</td></tr><tr><td><strong>KEY-1086</strong></td><td class='summary-cell'>Apr Card Title 32</td><td>Done</td><td class='num mw-heat mw-h1'>4.05d</td><td class='num'>1.96d</td><td class='num mw-heat mw-h1'>4.05d</td><td class='num'>0.15d</td><td class='num'>—</td><td class='num'>—</td><td>2026-04-07</td></tr></tbody></table><h3>Mar 2026</h3><table><thead><tr><th>Key</th><th class='summary-col'>Summary</th><th>Status</th><th class='th-mw'>Max watch stage days</th><th class='th-sens'>In Progress (d)</th><th class='th-sens'>Ready for Review (d)</th><th class='th-sens'>Review (d)</th><th class='th-sens'>Blocked (d)</th><th class='th-sens'>Ready for Deployment / QA (d)</th><th>Resolved</th></tr></thead><tbody><tr><td><strong>KEY-1068</strong></td><td class='summary-cell'>Mar Card Title 9, Mar Card Title 9 Mar Card Title 9</td><td>Done</td><td class='num mw-heat mw-h4'>16.03d</td><td class='num mw-heat mw-h4'>16.03d</td><td class='num'>—</td><td class='num'>—</td><td class='num'>—</td><td class='num'>—</td><td>2026-03-26</td></tr></tbody></table><h3>Feb 2026</h3><table><thead><tr><th>Key</th><th class='summary-col'>Summary</th><th>Status</th><th class='th-mw'>Max watch stage days</th><th class='th-sens'>In Progress (d)</th><th class='th-sens'>Ready for Review (d)</th><th class='th-sens'>Review (d)</th><th class='th-sens'>Blocked (d)</th><th class='th-sens'>Ready for Deployment / QA (d)</th><th>Resolved</th></tr></thead><tbody><tr><td><strong>KEY-1048</strong></td><td class='summary-cell'>Feb Card Title 6</td><td>Done</td><td class='num mw-heat mw-h1'>3.02d</td><td class='num mw-heat mw-h1'>3.02d</td><td class='num'>0.27d</td><td class='num'>—</td><td class='num'>—</td><td class='num'>—</td><td>2026-02-09</td></tr></tbody></table><h3>Jan 2026</h3><table><thead><tr><th>Key</th><th class='summary-col'>Summary</th><th>Status</th><th class='th-mw'>Max watch stage days</th><th class='th-sens'>In Progress (d)</th><th class='th-sens'>Ready for Review (d)</th><th class='th-sens'>Review (d)</th><th class='th-sens'>Blocked (d)</th><th class='th-sens'>Ready for Deployment / QA (d)</th><th>Resolved</th></tr></thead><tbody><tr><td colspan='10'>No issues reached 3 days in a single sensitive stage this month.</td></tr></tbody></table><h2>Top Spent Time by Key Stage</h2><p class='note'><strong>How these tables are built:</strong> Only issues from the <strong>latest month in this export (Apr 2026)</strong> are included. For each stage, we take that stage’s dwell time only (days shown; parsed from the sheet).<br><br>Issues with no time or zero in that stage are skipped. Rows are sorted by that stage’s dwell <strong>longest first</strong>; up to the <strong>top 10</strong> are shown per stage (the ranking pool keeps 15).<br><strong>Ready for Deployment / QA</strong> uses, per issue, the longer of Ready for Deployment and QA when both exist.</p><h3>In Progress</h3><table><thead><tr><th>Key</th><th class='summary-col'>Summary</th><th>Month</th><th>In Progress (d)</th></tr></thead><tbody><tr class='dwell-rank-1'><td><strong>KEY-1105</strong></td><td class='summary-cell'>Apr Card Title 18 Apr Card Title 18 Apr Card Title 18 Apr Card Title 18</td><td>Apr 2026</td><td class='num'>6.42d</td></tr><tr class='dwell-rank-2'><td><strong>KEY-1089</strong></td><td class='summary-cell'>Apr Card Title 31</td><td>Apr 2026</td><td class='num'>4.86d</td></tr><tr class='dwell-rank-3'><td><strong>KEY-1091</strong></td><td class='summary-cell'>Apr Card Title 29, Apr Card Title 29 Apr Card Title 29</td><td>Apr 2026</td><td class='num'>4.81d</td></tr><tr class='dwell-rank-4'><td><strong>KEY-1038</strong></td><td class='summary-cell'>Apr Card Title 36</td><td>Apr 2026</td><td class='num'>4.74d</td></tr><tr class='dwell-rank-5'><td><strong>KEY-1090</strong></td><td class='summary-cell'>Apr Card Title 30</td><td>Apr 2026</td><td class='num'>4.62d</td></tr><tr><td><strong>KEY-819</strong></td><td class='summary-cell'>Apr Card Title 37</td><td>Apr 2026</td><td class='num'>2.32d</td></tr><tr><td><strong>KEY-1106</strong></td><td class='summary-cell'>Apr Card Title 17</td><td>Apr 2026</td><td class='num'>2.02d</td></tr><tr><td><strong>KEY-1086</strong></td><td class='summary-cell'>Apr Card Title 32</td><td>Apr 2026</td><td class='num'>1.96d</td></tr><tr><td><strong>KEY-1109</strong></td><td class='summary-cell'>Apr Card Title 14</td><td>Apr 2026</td><td class='num'>1.10d</td></tr><tr><td><strong>KEY-1139</strong></td><td class='summary-cell'>Apr Card Title 1</td><td>Apr 2026</td><td class='num'>0.15d</td></tr></tbody></table><h3>Ready for Review</h3><table><thead><tr><th>Key</th><th class='summary-col'>Summary</th><th>Month</th><th>Ready for Review (d)</th></tr></thead><tbody><tr class='dwell-rank-1'><td><strong>KEY-1086</strong></td><td class='summary-cell'>Apr Card Title 32</td><td>Apr 2026</td><td class='num'>4.05d</td></tr><tr class='dwell-rank-2'><td><strong>KEY-819</strong></td><td class='summary-cell'>Apr Card Title 37</td><td>Apr 2026</td><td class='num'>2.81d</td></tr><tr class='dwell-rank-3'><td><strong>KEY-1109</strong></td><td class='summary-cell'>Apr Card Title 14</td><td>Apr 2026</td><td class='num'>2.69d</td></tr><tr class='dwell-rank-4'><td><strong>KEY-1091</strong></td><td class='summary-cell'>Apr Card Title 29, Apr Card Title 29 Apr Card Title 29</td><td>Apr 2026</td><td class='num'>0.96d</td></tr><tr class='dwell-rank-5'><td><strong>KEY-1106</strong></td><td class='summary-cell'>Apr Card Title 17</td><td>Apr 2026</td><td class='num'>0.73d</td></tr><tr><td><strong>KEY-1105</strong></td><td class='summary-cell'>Apr Card Title 18 Apr Card Title 18 Apr Card Title 18 Apr Card Title 18</td><td>Apr 2026</td><td class='num'>0.24d</td></tr><tr><td><strong>KEY-1090</strong></td><td class='summary-cell'>Apr Card Title 30</td><td>Apr 2026</td><td class='num'>0.12d</td></tr><tr><td><strong>KEY-1139</strong></td><td class='summary-cell'>Apr Card Title 1</td><td>Apr 2026</td><td class='num'>0.02d</td></tr></tbody></table><h3>Blocked</h3><table><thead><tr><th>Key</th><th class='summary-col'>Summary</th><th>Month</th><th>Blocked (d)</th></tr></thead><tbody><tr class='dwell-rank-1'><td><strong>KEY-819</strong></td><td class='summary-cell'>Apr Card Title 37</td><td>Apr 2026</td><td class='num'>5.89d</td></tr></tbody></table><p class='note'>Generated by delivery_metrics_report.py</p></div><script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+<script>
+(function() {
+  var btn = document.getElementById('btn-download-screenshot');
+  if (!btn) return;
+  btn.addEventListener('click', function() {
+    var root = document.getElementById('report-capture-root');
+    if (!root || typeof html2canvas === 'undefined') {
+      alert('Screenshot helper failed to load. Check your network and reload the page.');
+      return;
+    }
+    btn.disabled = true;
+    var label = btn.textContent;
+    btn.textContent = 'Working…';
+    var scale = Math.min(2, Math.max(1, window.devicePixelRatio || 1));
+    html2canvas(root, { scale: scale, useCORS: true, logging: false, backgroundColor: '#ffffff' })
+      .then(function(canvas) {
+        canvas.toBlob(function(blob) {
+          btn.disabled = false;
+          btn.textContent = label;
+          if (!blob) {
+            alert('Could not create image.');
+            return;
+          }
+          var url = URL.createObjectURL(blob);
+          var a = document.createElement('a');
+          a.href = url;
+          a.download = 'delivery-metrics-report-' + new Date().toISOString().slice(0, 19).replace(/[:T]/g, '-') + '.png';
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          URL.revokeObjectURL(url);
+        }, 'image/png', 0.92);
+      })
+      .catch(function(err) {
+        btn.disabled = false;
+        btn.textContent = label;
+        alert('Screenshot failed: ' + (err && err.message ? err.message : String(err)));
+      });
+  });
+})();
+</script>
+</body></html>
